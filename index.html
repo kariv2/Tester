@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cozy Winter Night</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0b0f19;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .scene {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.7)), 
+                        url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .lyrics-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            color: #ffffff;
+            padding: 0 20px;
+            max-width: 800px;
+        }
+        .lyric-line {
+            font-size: 1.8rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            position: absolute;
+            width: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .lyric-line.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <canvas id="snowCanvas"></canvas>
+        <div class="lyrics-container">
+            <div class="lyric-line active" id="lyricBox">we get married in our heads</div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas Snowfall Effect
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const snowflakes = [];
+        const numFlakes = 150;
+
+        for (let i = 0; i < numFlakes; i++) {
+            snowflakes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 3 + 1,
+                density: Math.random() * numFlakes,
+                speed: Math.random() * 1.5 + 0.5,
+                opacity: Math.random() * 0.7 + 0.3
+            });
+        }
+
+        function drawSnow() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < snowflakes.length; i++) {
+                let f = snowflakes[i];
+                ctx.fillStyle = `rgba(255, 255, 255, ${f.opacity})`;
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2, true);
+                ctx.fill();
+            }
+            updateSnow();
+        }
+
+        let angle = 0;
+        function updateSnow() {
+            angle += 0.01;
+            for (let i = 0; i < snowflakes.length; i++) {
+                let f = snowflakes[i];
+                f.y += f.speed;
+                f.x += Math.sin(angle + f.density) * 0.5;
+
+                if (f.y > canvas.height + 10) {
+                    f.y = -10;
+                    f.x = Math.random() * canvas.width;
+                }
+            }
+        }
+
+        function loop() {
+            drawSnow();
+            requestAnimationFrame(loop);
+        }
+        loop();
+
+        // Synchronized Lyrics Timing Loop
+        const lyrics = [
+            { text: "we get married in our heads", time: 0 },
+            { text: "something to do while we try to recall how we met", time: 6000 },
+            { text: "do you think I have forgotten?", time: 14000 },
+            { text: "do you think I have forgotten about you?", time: 22000 },
+            { text: "...", time: 32000 }
+        ];
+
+        const lyricBox = document.getElementById('lyricBox');
+
+        function playLyrics() {
+            let startTime = Date.now();
+
+            function update() {
+                let elapsed = (Date.now() - startTime) % 36000; // Loop every 36s
+                
+                let activeLyric = lyrics[0].text;
+                for (let i = 0; i < lyrics.length; i++) {
+                    if (elapsed >= lyrics[i].time) {
+                        activeLyric = lyrics[i].text;
+                    }
+                }
+
+                if (lyricBox.textContent !== activeLyric) {
+                    lyricBox.style.opacity = 0;
+                    setTimeout(() => {
+                        lyricBox.textContent = activeLyric;
+                        lyricBox.style.opacity = 1;
+                    }, 400);
+                }
+
+                requestAnimationFrame(update);
+            }
+            update();
+        }
+
+        setTimeout(playLyrics, 1000);
+    </script>
+</body>
+</html>
